@@ -65,6 +65,23 @@ mode = ['0']
 # Имя пользователя (Используется дальше)
 USERNAME = ['0']
 
+all_with_photo = []
+all_songs = []
+admins = []
+all_with_phrase = []
+admins_user = []
+
+
+count_id_phraselst = list(cur.execute("""SELECT id FROM films_phrase_questions"""))
+count_id_phrase = []
+for i in count_id_phraselst:
+    count_id_phrase.append(i)
+
+count_id_songslst = list(cur.execute("""SELECT id FROM line_from_songs_questions"""))
+count_id_songs = []
+for i in count_id_songslst:
+    count_id_songs.append(i)
+
 
 # Запуск бота, который спросит у пользователя имя
 @bot.message_handler(commands=['start'])
@@ -92,13 +109,12 @@ def start_next(message):
 
 # Действия, которые будут совершены после выбора режима пользователем
 def mode_selection(message):
-    global all_with_photo, all_with_phrase, all_songs, admins
-
     admins_db = cur.execute("""SELECT * FROM admins""").fetchall()
     admins_db = list(admins_db)
     admins = {}
     for admins_id, admins_nick in admins_db:
         admins[admins_id] = admins_nick
+    admins_user.append(admins)
 
     # Очищает списки ответов, для выбора другого режима
     wrong_answers_count.clear()
@@ -107,26 +123,27 @@ def mode_selection(message):
     # Клавиатура для режима "Фильм по кадру"
     if message.text.lower() == 'угадать фильм по кадру':
 
-        all_with_photo = cur.execute("""SELECT * FROM films_photo_questions""").fetchall()
-        all_with_photo = list(all_with_photo)
+        all_with_photolst = cur.execute("""SELECT * FROM films_photo_questions""").fetchall()
+        all_with_photolst = list(all_with_photolst)
+        all_with_photo.append(all_with_photolst)
 
         mode.append('photo')
 
         # Перемешивание списка вопросов
-        random.shuffle(all_with_photo)
+        random.shuffle(all_with_photo[0])
 
         # Создание Inline клавиатуры
         photo_markup = types.InlineKeyboardMarkup(row_width=1)
 
-        add1 = types.InlineKeyboardButton(text=f"{all_with_photo[0][1].split('@')[0]}", callback_data=1)
-        add2 = types.InlineKeyboardButton(text=f"{all_with_photo[0][1].split('@')[1]}", callback_data=2)
-        add3 = types.InlineKeyboardButton(text=f"{all_with_photo[0][1].split('@')[2]}", callback_data=3)
-        add4 = types.InlineKeyboardButton(text=f"{all_with_photo[0][1].split('@')[3]}", callback_data=4)
+        add1 = types.InlineKeyboardButton(text=f"{all_with_photo[0][0][1].split('@')[0]}", callback_data=1)
+        add2 = types.InlineKeyboardButton(text=f"{all_with_photo[0][0][1].split('@')[1]}", callback_data=2)
+        add3 = types.InlineKeyboardButton(text=f"{all_with_photo[0][0][1].split('@')[2]}", callback_data=3)
+        add4 = types.InlineKeyboardButton(text=f"{all_with_photo[0][0][1].split('@')[3]}", callback_data=4)
         back = types.InlineKeyboardButton(text="Вернуться назад", callback_data=5)
 
         photo_markup.add(add1, add2, add3, add4, back)
 
-        photo_file = open(all_with_photo[0][3], 'rb')
+        photo_file = open(all_with_photo[0][0][3], 'rb')
 
         bot.send_photo(message.chat.id, photo_file, caption='Из какого фильма этот кадр?',
                        reply_markup=photo_markup)
@@ -134,52 +151,54 @@ def mode_selection(message):
     # Клавиатура для режима "Фильм по фразе"
     elif message.text.lower() == 'угадать фильм по фразе':
 
-        all_with_phrase = cur.execute("""SELECT * FROM films_phrase_questions""").fetchall()
-        all_with_phrase = list(all_with_phrase)
+        all_with_phraselst = cur.execute("""SELECT * FROM films_phrase_questions""").fetchall()
+        all_with_phraselst = list(all_with_phraselst)
+        all_with_phrase.append(all_with_phraselst)
 
         mode.append('phrase')
 
         # Перемешивание списка вопросов
-        random.shuffle(all_with_phrase)
+        random.shuffle(all_with_phrase[0])
 
         # Создание Inline клавиатуры
         phrase_markup = types.InlineKeyboardMarkup(row_width=1)
 
-        add1 = types.InlineKeyboardButton(text=f"{all_with_phrase[0][1].split('@')[0]}", callback_data=1)
-        add2 = types.InlineKeyboardButton(text=f"{all_with_phrase[0][1].split('@')[1]}", callback_data=2)
-        add3 = types.InlineKeyboardButton(text=f"{all_with_phrase[0][1].split('@')[2]}", callback_data=3)
-        add4 = types.InlineKeyboardButton(text=f"{all_with_phrase[0][1].split('@')[3]}", callback_data=4)
+        add1 = types.InlineKeyboardButton(text=f"{all_with_phrase[0][0][1].split('@')[0]}", callback_data=1)
+        add2 = types.InlineKeyboardButton(text=f"{all_with_phrase[0][0][1].split('@')[1]}", callback_data=2)
+        add3 = types.InlineKeyboardButton(text=f"{all_with_phrase[0][0][1].split('@')[2]}", callback_data=3)
+        add4 = types.InlineKeyboardButton(text=f"{all_with_phrase[0][0][1].split('@')[3]}", callback_data=4)
         back = types.InlineKeyboardButton(text="Вернуться назад", callback_data=5)
 
         phrase_markup.add(add1, add2, add3, add4, back)
 
-        bot.send_message(message.chat.id, f'Из какого фильма эта фраза?\n\n<b>{all_with_phrase[0][3]}</b>',
+        bot.send_message(message.chat.id, f'Из какого фильма эта фраза?\n\n<b>{all_with_phrase[0][0][3]}</b>',
                          parse_mode='html',
                          reply_markup=phrase_markup)
 
     # Клавиатура для режима "Песня по строчке"
     elif message.text.lower() == 'угадать песню строчке':
 
-        all_songs = cur.execute("""SELECT * FROM line_from_songs_questions""").fetchall()
-        all_songs = list(all_songs)
+        all_songslst = cur.execute("""SELECT * FROM line_from_songs_questions""").fetchall()
+        all_songslst = list(all_songslst)
+        all_songs.append(all_songslst)
 
         mode.append('song')
 
         # Перемешивание списка вопросов
-        random.shuffle(all_songs)
+        random.shuffle(all_songs[0])
 
         # Создание Inline клавиатуры
         songs_markup = types.InlineKeyboardMarkup(row_width=1)
 
-        add1 = types.InlineKeyboardButton(text=f"{all_songs[0][1].split('@')[0]}", callback_data=1)
-        add2 = types.InlineKeyboardButton(text=f"{all_songs[0][1].split('@')[1]}", callback_data=2)
-        add3 = types.InlineKeyboardButton(text=f"{all_songs[0][1].split('@')[2]}", callback_data=3)
-        add4 = types.InlineKeyboardButton(text=f"{all_songs[0][1].split('@')[3]}", callback_data=4)
+        add1 = types.InlineKeyboardButton(text=f"{all_songs[0][0][1].split('@')[0]}", callback_data=1)
+        add2 = types.InlineKeyboardButton(text=f"{all_songs[0][0][1].split('@')[1]}", callback_data=2)
+        add3 = types.InlineKeyboardButton(text=f"{all_songs[0][0][1].split('@')[2]}", callback_data=3)
+        add4 = types.InlineKeyboardButton(text=f"{all_songs[0][0][1].split('@')[3]}", callback_data=4)
         back = types.InlineKeyboardButton(text="Вернуться назад", callback_data=5)
 
         songs_markup.add(add1, add2, add3, add4, back)
 
-        bot.send_message(message.chat.id, f'Из какого фильма эта фраза?\n\n<b>{all_songs[0][3]}</b>',
+        bot.send_message(message.chat.id, f'Из какого фильма эта фраза?\n\n<b>{all_songs[0][0][3]}</b>',
                          parse_mode='html',
                          reply_markup=songs_markup)
 
@@ -190,8 +209,8 @@ def mode_selection(message):
 
     # Создание уровней (только администраторам)
     elif message.text.lower() == 'создать свой уровень':
-        if message.from_user.id in admins:
-            sent = bot.send_message(message.chat.id, f'<b>Здравствуйте, {admins[message.from_user.id]}.\n</b>'
+        if message.from_user.id in admins[0]:
+            sent = bot.send_message(message.chat.id, f'<b>Здравствуйте, {admins[0][message.from_user.id]}.\n</b>'
                                                      f'Выберите, в каком режиме нужно создать уровень',
                                     parse_mode='html', reply_markup=create_markup)
             bot.register_next_step_handler(sent, choose_create_the_level_phrase_or_song)
@@ -200,8 +219,8 @@ def mode_selection(message):
                                     reply_markup=markup)
             bot.register_next_step_handler(sent, mode_selection)
     elif message.text.lower() == '/next' or message.text.lower() == '/start':
-        sent = bot.send_message(message.chat.id, f'Выберите режим', reply_markup=markup)
-        bot.register_next_step_handler(sent, mode_selection)
+            sent = bot.send_message(message.chat.id, f'Выберите режим', reply_markup=markup)
+            bot.register_next_step_handler(sent, mode_selection)
     else:
         sent = bot.send_message(message.chat.id, f'<b>Я вас не понимаю. Выберите режим\n</b>',
                                 parse_mode='html', reply_markup=markup)
@@ -229,16 +248,12 @@ def choose_create_the_level_phrase_or_song(message):
 # а затем просит его ввести варианты ответа и записывает их в бд
 def create_the_level_phrase(message):
     try:
-        global count_id_phrase
-        count_id_phrase = list(cur.execute("""SELECT COUNT(id) FROM films_phrase_questions"""))
-        for i in count_id_phrase[0]:
-            count_id_phrase = i
-        count_id_phrase += 1
+        count_id_phrase.append(1)
         cur.execute(f"""INSERT INTO films_phrase_questions (id, phrase) 
-                        VALUES ({count_id_phrase}, '{message.text}')""").fetchall()
+                        VALUES ({len(count_id_phrase)}, '{message.text}')""").fetchall()
         conn.commit()
-        sent = bot.send_message(message.chat.id, 'Хорошо. Теперь напишите варианты ответов.\nКаждый вариант записывайте '
-                                                 'через знак "%"\n'
+        sent = bot.send_message(message.chat.id, 'Хорошо. Теперь напишите варианты ответов.\nКаждый вариант записывайте'
+                                                 ' через знак "%"\n'
                                                  'Пример:\nМадагаскар%Форест Гамп%Зеленая миля%Майнкрафт')
         bot.register_next_step_handler(sent, create_the_level_phrase_all_answers)
     except Exception:
@@ -249,11 +264,10 @@ def create_the_level_phrase(message):
 # Показывает пользователю результат записи, а затем спрашивает правильный ответ и записывает его в бд
 def create_the_level_phrase_all_answers(message):
     try:
-        global count_id_phrase
         answers = message.text.split('%')
         cur.execute(f"""UPDATE films_phrase_questions 
                         SET answer_options = '1.{answers[0]}@2.{answers[1]}@3.{answers[2]}@4.{answers[3]}'
-                        WHERE id = {count_id_phrase}""").fetchall()
+                        WHERE id = {len(count_id_phrase)}""").fetchall()
         conn.commit()
         sent = bot.send_message(message.chat.id,
                                 f'Отлично.\n'
@@ -272,10 +286,9 @@ def create_the_level_phrase_all_answers(message):
 # Сообщает пользователю об успешном создание вопроса
 def create_the_level_phrase_ans_and_success(message):
     try:
-        global count_id_phrase
         cur.execute(f"""UPDATE films_phrase_questions 
                         SET correct_answer = {int(message.text)}
-                        WHERE id = {count_id_phrase}""")
+                        WHERE id = {len(count_id_phrase)}""")
         conn.commit()
         sent = bot.send_message(message.chat.id, 'Вопрос создан! Он появился в списке вопросов. А теперь выбирайте режим!',
                                 reply_markup=markup)
@@ -289,13 +302,9 @@ def create_the_level_phrase_ans_and_success(message):
 # а затем просит его ввести варианты ответа и записывает их в бд
 def create_the_level_song(message):
     try:
-        global count_id_songs
-        count_id_songs = list(cur.execute("""SELECT COUNT(id) FROM line_from_songs_questions"""))
-        for i in count_id_songs[0]:
-            count_id_songs = i
-        count_id_songs += 1
+        count_id_songs.append('1')
         cur.execute(f"""INSERT INTO line_from_songs_questions (id, line) 
-                            VALUES ({count_id_songs}, '{message.text}')""").fetchall()
+                            VALUES ({len(count_id_songs)}, '{message.text}')""").fetchall()
         conn.commit()
         sent = bot.send_message(message.chat.id, 'Хорошо. Теперь напишите варианты ответов.\nКаждый вариант записывайте '
                                                  'через знак "%"\n'
@@ -369,8 +378,8 @@ def check_the_weather(message):
 # Удаляет вопрос с фото, после получения на него ответа.
 # Если вопросы кончаются, бот выдает сообщение об окончании игры
 def next_quest_photo(message):
-    if len(all_with_photo) > 1:
-        all_with_photo.pop(0)
+    if len(all_with_photo[0]) > 1:
+        all_with_photo[0].pop(0)
     else:
         photo_file = open('data/pics/the_end.png', 'rb')
         sent = bot.edit_message_media(media=types.InputMedia(type='photo', media=photo_file,
@@ -387,8 +396,8 @@ def next_quest_photo(message):
 # Удаляет вопрос с фразой, после получения на него ответа.
 # Если вопросы кончаются, бот выдает сообщение об окончании игры
 def next_quest_phrase(message):
-    if len(all_with_phrase) > 1:
-        all_with_phrase.pop(0)
+    if len(all_with_phrase[0]) > 1:
+        all_with_phrase[0].pop(0)
     else:
         sent = bot.edit_message_text(text=f'<b>Игра окончена</b>\n'
                                           f'Правильных ответов: {len(correct_answers_count)}\n'
@@ -403,8 +412,8 @@ def next_quest_phrase(message):
 # Удаляет вопрос со строкой из песни, после получения на него ответа.
 # Если вопросы кончаются, бот выдает сообщение об окончании игры
 def next_quest_song(message):
-    if len(all_songs) > 1:
-        all_songs.pop(0)
+    if len(all_songs[0]) > 1:
+        all_songs[0].pop(0)
     else:
         sent = bot.edit_message_text(text=f'<b>Игра окончена</b>\n'
                                           f'Правильных ответов: {len(correct_answers_count)}\n'
@@ -422,7 +431,7 @@ def func_callback(callback):
     if int(callback.data) != 5:
         # Проверяет режим на "Угадать фильм по фото"
         if mode[-1] == 'photo':
-            user_answer = all_with_photo[0][2]
+            user_answer = all_with_photo[0][0][2]
             if int(callback.data) == int(user_answer):
                 correct_answers_count.append(1)
             else:
@@ -434,15 +443,15 @@ def func_callback(callback):
             # Обновление Inline клавиатуры
             next_film = types.InlineKeyboardMarkup(row_width=1)
 
-            next_answer1 = types.InlineKeyboardButton(text=f"{all_with_photo[0][1].split('@')[0]}", callback_data=1)
-            next_answer2 = types.InlineKeyboardButton(text=f"{all_with_photo[0][1].split('@')[1]}", callback_data=2)
-            next_answer3 = types.InlineKeyboardButton(text=f"{all_with_photo[0][1].split('@')[2]}", callback_data=3)
-            next_answer4 = types.InlineKeyboardButton(text=f"{all_with_photo[0][1].split('@')[3]}", callback_data=4)
+            next_answer1 = types.InlineKeyboardButton(text=f"{all_with_photo[0][0][1].split('@')[0]}", callback_data=1)
+            next_answer2 = types.InlineKeyboardButton(text=f"{all_with_photo[0][0][1].split('@')[1]}", callback_data=2)
+            next_answer3 = types.InlineKeyboardButton(text=f"{all_with_photo[0][0][1].split('@')[2]}", callback_data=3)
+            next_answer4 = types.InlineKeyboardButton(text=f"{all_with_photo[0][0][1].split('@')[3]}", callback_data=4)
             back = types.InlineKeyboardButton(text="Вернуться назад", callback_data=5)
 
             next_film.add(next_answer1, next_answer2, next_answer3, next_answer4, back)
 
-            photo_file = open(all_with_photo[0][3], 'rb')
+            photo_file = open(all_with_photo[0][0][3], 'rb')
 
             # Сравнивает ответ пользователя с правильным
             if int(callback.data) == int(user_answer):
@@ -451,7 +460,7 @@ def func_callback(callback):
                                                                       f'Правильных ответов: '
                                                                       f'{len(correct_answers_count)}\n'
                                                                       f'Ошибок: {len(wrong_answers_count)}\n'
-                                                                      f'Осталось вопросов: {len(all_with_photo)}\n'
+                                                                      f'Осталось вопросов: {len(all_with_photo[0])}\n'
                                                                       f'Из какого фильма этот взят кадр?',
                                                               parse_mode='html'),
                                        chat_id=callback.message.chat.id, message_id=callback.message.id,
@@ -463,7 +472,7 @@ def func_callback(callback):
                                                                       f'Правильных ответов: '
                                                                       f'{len(correct_answers_count)}\n'
                                                                       f'Ошибок: {len(wrong_answers_count)}\n'
-                                                                      f'Осталось вопросов: {len(all_with_photo)}\n'
+                                                                      f'Осталось вопросов: {len(all_with_photo[0])}\n'
                                                                       f'Из какого фильма этот взят кадр?',
                                                               parse_mode='html'),
                                        chat_id=callback.message.chat.id, message_id=callback.message.id,
@@ -471,7 +480,7 @@ def func_callback(callback):
 
         # Проверка режима на "Угадать фильм по фразе"
         elif mode[-1] == 'phrase':
-            user_answer = all_with_phrase[0][2]
+            user_answer = all_with_phrase[0][0][2]
             if int(callback.data) == int(user_answer):
                 correct_answers_count.append(1)
             else:
@@ -483,10 +492,10 @@ def func_callback(callback):
             # Обновление Inline клавиатуры
             next_phrase = types.InlineKeyboardMarkup(row_width=1)
 
-            next_answer1 = types.InlineKeyboardButton(text=f"{all_with_phrase[0][1].split('@')[0]}", callback_data=1)
-            next_answer2 = types.InlineKeyboardButton(text=f"{all_with_phrase[0][1].split('@')[1]}", callback_data=2)
-            next_answer3 = types.InlineKeyboardButton(text=f"{all_with_phrase[0][1].split('@')[2]}", callback_data=3)
-            next_answer4 = types.InlineKeyboardButton(text=f"{all_with_phrase[0][1].split('@')[3]}", callback_data=4)
+            next_answer1 = types.InlineKeyboardButton(text=f"{all_with_phrase[0][0][1].split('@')[0]}", callback_data=1)
+            next_answer2 = types.InlineKeyboardButton(text=f"{all_with_phrase[0][0][1].split('@')[1]}", callback_data=2)
+            next_answer3 = types.InlineKeyboardButton(text=f"{all_with_phrase[0][0][1].split('@')[2]}", callback_data=3)
+            next_answer4 = types.InlineKeyboardButton(text=f"{all_with_phrase[0][0][1].split('@')[3]}", callback_data=4)
             back = types.InlineKeyboardButton(text="Вернуться назад", callback_data=5)
 
             next_phrase.add(next_answer1, next_answer2, next_answer3, next_answer4, back)
@@ -499,9 +508,9 @@ def func_callback(callback):
                     text=f'<b>Верно!</b>\n'
                          f'Правильных ответов: {len(correct_answers_count)}\n'
                          f'Ошибок: {len(wrong_answers_count)}\n'
-                         f'Осталось вопросов: {len(all_with_phrase)}\n'
+                         f'Осталось вопросов: {len(all_with_phrase[0])}\n'
                          f'<b>Из какого фильма эта фраза?</b>\n\n'
-                         f'{all_with_phrase[0][3]}',
+                         f'{all_with_phrase[0][0][3]}',
                     reply_markup=next_phrase, parse_mode='html')
 
             else:
@@ -511,14 +520,14 @@ def func_callback(callback):
                     text=f'<b>Неверный ответ.</b>\n'
                          f'Правильных ответов: {len(correct_answers_count)}\n'
                          f'Ошибок: {len(wrong_answers_count)}\n'
-                         f'Осталось вопросов: {len(all_with_phrase)}\n'
+                         f'Осталось вопросов: {len(all_with_phrase[0])}\n'
                          f'<b>Из какого фильма эта фраза?</b>\n\n'
-                         f'{all_with_phrase[0][3]}', parse_mode='html',
+                         f'{all_with_phrase[0][0][3]}', parse_mode='html',
                     reply_markup=next_phrase)
 
         # Проверка режима на "Угадать песню по строчке"
         elif mode[-1] == 'song':
-            user_answer = all_songs[0][2]
+            user_answer = all_songs[0][0][2]
             if int(callback.data) == int(user_answer):
                 correct_answers_count.append(1)
             else:
@@ -530,10 +539,10 @@ def func_callback(callback):
             # Обновление Inline клавиатуры
             next_song = types.InlineKeyboardMarkup(row_width=1)
 
-            next_answer1 = types.InlineKeyboardButton(text=f"{all_songs[0][1].split('@')[0]}", callback_data=1)
-            next_answer2 = types.InlineKeyboardButton(text=f"{all_songs[0][1].split('@')[1]}", callback_data=2)
-            next_answer3 = types.InlineKeyboardButton(text=f"{all_songs[0][1].split('@')[2]}", callback_data=3)
-            next_answer4 = types.InlineKeyboardButton(text=f"{all_songs[0][1].split('@')[3]}", callback_data=4)
+            next_answer1 = types.InlineKeyboardButton(text=f"{all_songs[0][0][1].split('@')[0]}", callback_data=1)
+            next_answer2 = types.InlineKeyboardButton(text=f"{all_songs[0][0][1].split('@')[1]}", callback_data=2)
+            next_answer3 = types.InlineKeyboardButton(text=f"{all_songs[0][0][1].split('@')[2]}", callback_data=3)
+            next_answer4 = types.InlineKeyboardButton(text=f"{all_songs[0][0][1].split('@')[3]}", callback_data=4)
             back = types.InlineKeyboardButton(text="Вернуться назад", callback_data=5)
 
             next_song.add(next_answer1, next_answer2, next_answer3, next_answer4, back)
@@ -546,9 +555,9 @@ def func_callback(callback):
                     text=f'<b>Верно!</b>\n'
                          f'Правильных ответов: {len(correct_answers_count)}\n'
                          f'Ошибок: {len(wrong_answers_count)}\n'
-                         f'Осталось вопросов: {len(all_songs)}\n'
+                         f'Осталось вопросов: {len(all_songs[0])}\n'
                          f'<b>Из какой песни эта строчка?</b>\n\n'
-                         f'{all_songs[0][3]}',
+                         f'{all_songs[0][0][3]}',
                     reply_markup=next_song, parse_mode='html')
 
             else:
@@ -558,9 +567,9 @@ def func_callback(callback):
                     text=f'<b>Неверный ответ.</b>\n'
                          f'Правильных ответов: {len(correct_answers_count)}\n'
                          f'Ошибок: {len(wrong_answers_count)}\n'
-                         f'Осталось вопросов: {len(all_songs)}\n'
+                         f'Осталось вопросов: {len(all_songs[0])}\n'
                          f'<b>Из какой песни эта строчка?</b>\n\n'
-                         f'{all_songs[0][3]}', parse_mode='html',
+                         f'{all_songs[0][0][3]}', parse_mode='html',
                     reply_markup=next_song)
 
     else:
