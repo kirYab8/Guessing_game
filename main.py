@@ -47,7 +47,7 @@ film_phrase = types.KeyboardButton('Угадать фильм по фразе')
 film_photo = types.KeyboardButton('Угадать фильм по кадру')
 line_from_song = types.KeyboardButton('Угадать песню строчке')
 weather_key = types.KeyboardButton('Узнать погоду в моем городе')
-create_level = types.KeyboardButton('Создать свой вопрос')
+create_level = types.KeyboardButton('Создать свой уровень')
 markup.add(film_photo, film_phrase, line_from_song, weather_key, create_level)
 
 create_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2, one_time_keyboard=True)
@@ -88,6 +88,7 @@ def start_next(message):
                  f'Создать свой уровень <b>(Только для администраторов!)</b>'
     start_hello = bot.send_message(message.chat.id, f'{hello_name} ', parse_mode='html', reply_markup=markup)
     bot.register_next_step_handler(start_hello, mode_selection)
+
 
 # Действия, которые будут совершены после выбора режима пользователем
 def mode_selection(message):
@@ -328,6 +329,7 @@ def create_the_level_songs_ans_and_success(message):
     except Exception:
         sent = bot.send_message(message.chat.id, 'Что-то пошло не так. Выберите режим еще раз', reply_markup=markup)
         bot.register_next_step_handler(sent, mode_selection)
+
 
 # Определяет погоду в ведённом городе
 def check_the_weather(message):
