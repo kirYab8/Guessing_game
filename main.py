@@ -199,6 +199,13 @@ def mode_selection(message):
             sent = bot.send_message(message.chat.id, '<b>У вас недостаточно прав.</b>', parse_mode='html',
                                     reply_markup=markup)
             bot.register_next_step_handler(sent, mode_selection)
+    elif message.text.lower() == '/next' or message.text.lower() == '/start':
+        sent = bot.send_message(message.chat.id, f'Выберите режим', reply_markup=markup)
+        bot.register_next_step_handler(sent, mode_selection)
+    else:
+        sent = bot.send_message(message.chat.id, f'<b>Я вас не понимаю. Выберите режим\n</b>',
+                                parse_mode='html', reply_markup=markup)
+        bot.register_next_step_handler(sent, mode_selection)
 
 
 # Обработка выбора режима создания пользователем
@@ -209,6 +216,13 @@ def choose_create_the_level_phrase_or_song(message):
     elif message.text.lower() == 'песня по строчке':
         sent = bot.send_message(message.chat.id, 'Введите строчку из песни:')
         bot.register_next_step_handler(sent, create_the_level_song)
+    elif message.text.lower() == '/next' or message.text.lower() == '/start':
+        sent = bot.send_message(message.chat.id, f'Выберите режим', reply_markup=markup)
+        bot.register_next_step_handler(sent, mode_selection)
+    else:
+        sent = bot.send_message(message.chat.id, f'<b>Я вас не понимаю. Выберите режим\n</b>',
+                                parse_mode='html', reply_markup=markup)
+        bot.register_next_step_handler(sent, mode_selection)
 
 
 # Добавляет фразу, введённую пользователем, в базу данных,
