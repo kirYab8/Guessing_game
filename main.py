@@ -209,8 +209,8 @@ def mode_selection(message):
 
     # Создание уровней (только администраторам)
     elif message.text.lower() == 'создать свой уровень':
-        if message.from_user.id in admins[0]:
-            sent = bot.send_message(message.chat.id, f'<b>Здравствуйте, {admins[0][message.from_user.id]}.\n</b>'
+        if message.from_user.id in admins:
+            sent = bot.send_message(message.chat.id, f'<b>Здравствуйте, {admins[message.from_user.id]}.\n</b>'
                                                      f'Выберите, в каком режиме нужно создать уровень',
                                     parse_mode='html', reply_markup=create_markup)
             bot.register_next_step_handler(sent, choose_create_the_level_phrase_or_song)
@@ -318,11 +318,10 @@ def create_the_level_song(message):
 # Показывает пользователю результат записи, а затем спрашивает правильный ответ и записывает его в бд
 def create_the_level_songs_all_answers(message):
     try:
-        global count_id_songs
         answers = message.text.split('%')
         cur.execute(f"""UPDATE line_from_songs_questions 
                             SET answer_options = '1.{answers[0]}@2.{answers[1]}@3.{answers[2]}@4.{answers[3]}'
-                            WHERE id = {count_id_songs}""").fetchall()
+                            WHERE id = {len(count_id_songs)}""").fetchall()
         conn.commit()
         sent = bot.send_message(message.chat.id,
                                 f'Отлично.\n'
@@ -341,10 +340,9 @@ def create_the_level_songs_all_answers(message):
 # Сообщает пользователю об успешном создание вопроса
 def create_the_level_songs_ans_and_success(message):
     try:
-        global count_id_songs
         cur.execute(f"""UPDATE line_from_songs_questions 
                             SET correct_answer = {int(message.text)}
-                            WHERE id = {count_id_songs}""")
+                            WHERE id = {len(count_id_songs)}""")
         conn.commit()
         sent = bot.send_message(message.chat.id, 'Вопрос создан! Он появился в списке вопросов. А теперь выбирайте режим!',
                                 reply_markup=markup)
