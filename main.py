@@ -71,7 +71,6 @@ all_with_phrase = []
 admins = []
 admins_user = []
 
-
 count_id_phraselst = list(cur.execute("""SELECT id FROM films_phrase_questions"""))
 count_id_phrase = []
 for i in count_id_phraselst:
@@ -219,8 +218,8 @@ def mode_selection(message):
                                     reply_markup=markup)
             bot.register_next_step_handler(sent, mode_selection)
     elif message.text.lower() == '/next' or message.text.lower() == '/start':
-            sent = bot.send_message(message.chat.id, f'Выберите режим', reply_markup=markup)
-            bot.register_next_step_handler(sent, mode_selection)
+        sent = bot.send_message(message.chat.id, f'Выберите режим', reply_markup=markup)
+        bot.register_next_step_handler(sent, mode_selection)
     else:
         sent = bot.send_message(message.chat.id, f'<b>Я вас не понимаю. Выберите режим\n</b>',
                                 parse_mode='html', reply_markup=markup)
@@ -303,7 +302,8 @@ def create_the_level_phrase_ans_and_success(message):
         all_with_phraselst = list(all_with_phraselst)
         all_with_phrase.append(all_with_phraselst)
 
-        sent = bot.send_message(message.chat.id, 'Вопрос создан! Он появился в списке вопросов. А теперь выбирайте режим!',
+        sent = bot.send_message(message.chat.id,
+                                'Вопрос создан! Он появился в списке вопросов. А теперь выбирайте режим!',
                                 reply_markup=markup)
         bot.register_next_step_handler(sent, mode_selection)
     except Exception:
@@ -322,9 +322,10 @@ def create_the_level_song(message):
         cur.execute(f"""INSERT INTO line_from_songs_questions (id, line) 
                             VALUES ({len(count_id_songs)}, '{message.text}')""").fetchall()
         conn.commit()
-        sent = bot.send_message(message.chat.id, 'Хорошо. Теперь напишите варианты ответов.\nКаждый вариант записывайте '
-                                                 'через знак "%"\n'
-                                                 'Пример:\nТёплый ужин%Голая%Когда-нибудь%Девочка-деньги')
+        sent = bot.send_message(message.chat.id,
+                                'Хорошо. Теперь напишите варианты ответов.\nКаждый вариант записывайте '
+                                'через знак "%"\n'
+                                'Пример:\nТёплый ужин%Голая%Когда-нибудь%Девочка-деньги')
         bot.register_next_step_handler(sent, create_the_level_songs_all_answers)
     except Exception:
         cur.execute(f"""DELETE FROM line_from_songs_questions WHERE id = {len(count_id_songs)}""")
@@ -373,7 +374,8 @@ def create_the_level_songs_ans_and_success(message):
         all_songslst = list(all_songslst)
         all_songs.append(all_songslst)
 
-        sent = bot.send_message(message.chat.id, 'Вопрос создан! Он появился в списке вопросов. А теперь выбирайте режим!',
+        sent = bot.send_message(message.chat.id,
+                                'Вопрос создан! Он появился в списке вопросов. А теперь выбирайте режим!',
                                 reply_markup=markup)
         bot.register_next_step_handler(sent, mode_selection)
     except Exception:
