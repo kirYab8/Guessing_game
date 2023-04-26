@@ -67,8 +67,8 @@ USERNAME = ['0']
 
 all_with_photo = []
 all_songs = []
-admins = []
 all_with_phrase = []
+admins = []
 admins_user = []
 
 
@@ -198,7 +198,7 @@ def mode_selection(message):
 
         songs_markup.add(add1, add2, add3, add4, back)
 
-        bot.send_message(message.chat.id, f'Из какого фильма эта фраза?\n\n<b>{all_songs[0][0][3]}</b>',
+        bot.send_message(message.chat.id, f'Из какой песни эта строчка?\n\n<b>{all_songs[0][0][3]}</b>',
                          parse_mode='html',
                          reply_markup=songs_markup)
 
@@ -257,6 +257,9 @@ def create_the_level_phrase(message):
                                                  'Пример:\nМадагаскар%Форест Гамп%Зеленая миля%Майнкрафт')
         bot.register_next_step_handler(sent, create_the_level_phrase_all_answers)
     except Exception:
+        cur.execute(f"""DELETE FROM films_phrase_questions WHERE id = {len(count_id_phrase)}""")
+        conn.commit()
+        count_id_phrase.pop(-1)
         sent = bot.send_message(message.chat.id, 'Что-то пошло не так. Выберите режим еще раз', reply_markup=markup)
         bot.register_next_step_handler(sent, mode_selection)
 
@@ -279,6 +282,9 @@ def create_the_level_phrase_all_answers(message):
                                 f'А теперь введите номер правильного ответа')
         bot.register_next_step_handler(sent, create_the_level_phrase_ans_and_success)
     except Exception:
+        cur.execute(f"""DELETE FROM films_phrase_questions WHERE id = {len(count_id_phrase)}""")
+        conn.commit()
+        count_id_phrase.pop(-1)
         sent = bot.send_message(message.chat.id, 'Что-то пошло не так. Выберите режим еще раз', reply_markup=markup)
         bot.register_next_step_handler(sent, mode_selection)
 
@@ -290,10 +296,20 @@ def create_the_level_phrase_ans_and_success(message):
                         SET correct_answer = {int(message.text)}
                         WHERE id = {len(count_id_phrase)}""")
         conn.commit()
+
+        all_with_phrase.clear()
+
+        all_with_phraselst = cur.execute("""SELECT * FROM films_phrase_questions""").fetchall()
+        all_with_phraselst = list(all_with_phraselst)
+        all_with_phrase.append(all_with_phraselst)
+
         sent = bot.send_message(message.chat.id, 'Вопрос создан! Он появился в списке вопросов. А теперь выбирайте режим!',
                                 reply_markup=markup)
         bot.register_next_step_handler(sent, mode_selection)
     except Exception:
+        cur.execute(f"""DELETE FROM films_phrase_questions WHERE id = {len(count_id_phrase)}""")
+        conn.commit()
+        count_id_phrase.pop(-1)
         sent = bot.send_message(message.chat.id, 'Что-то пошло не так. Выберите режим еще раз', reply_markup=markup)
         bot.register_next_step_handler(sent, mode_selection)
 
@@ -311,6 +327,9 @@ def create_the_level_song(message):
                                                  'Пример:\nТёплый ужин%Голая%Когда-нибудь%Девочка-деньги')
         bot.register_next_step_handler(sent, create_the_level_songs_all_answers)
     except Exception:
+        cur.execute(f"""DELETE FROM line_from_songs_questions WHERE id = {len(count_id_songs)}""")
+        conn.commit()
+        count_id_songs.pop(-1)
         sent = bot.send_message(message.chat.id, 'Что-то пошло не так. Выберите режим еще раз', reply_markup=markup)
         bot.register_next_step_handler(sent, mode_selection)
 
@@ -333,6 +352,9 @@ def create_the_level_songs_all_answers(message):
                                 f'А теперь введите номер правильного ответа')
         bot.register_next_step_handler(sent, create_the_level_songs_ans_and_success)
     except Exception:
+        cur.execute(f"""DELETE FROM line_from_songs_questions WHERE id = {len(count_id_songs)}""")
+        conn.commit()
+        count_id_songs.pop(-1)
         sent = bot.send_message(message.chat.id, 'Что-то пошло не так. Выберите режим еще раз', reply_markup=markup)
         bot.register_next_step_handler(sent, mode_selection)
 
@@ -344,10 +366,20 @@ def create_the_level_songs_ans_and_success(message):
                             SET correct_answer = {int(message.text)}
                             WHERE id = {len(count_id_songs)}""")
         conn.commit()
+
+        all_songs.clear()
+
+        all_songslst = cur.execute("""SELECT * FROM line_from_songs_questions""").fetchall()
+        all_songslst = list(all_songslst)
+        all_songs.append(all_songslst)
+
         sent = bot.send_message(message.chat.id, 'Вопрос создан! Он появился в списке вопросов. А теперь выбирайте режим!',
                                 reply_markup=markup)
         bot.register_next_step_handler(sent, mode_selection)
     except Exception:
+        cur.execute(f"""DELETE FROM line_from_songs_questions WHERE id = {len(count_id_songs)}""")
+        conn.commit()
+        count_id_songs.pop(-1)
         sent = bot.send_message(message.chat.id, 'Что-то пошло не так. Выберите режим еще раз', reply_markup=markup)
         bot.register_next_step_handler(sent, mode_selection)
 
@@ -379,6 +411,12 @@ def next_quest_photo(message):
     if len(all_with_photo[0]) > 1:
         all_with_photo[0].pop(0)
     else:
+        all_with_photo.clear()
+
+        all_with_photolst = cur.execute("""SELECT * FROM films_photo_questions""").fetchall()
+        all_with_photolst = list(all_with_photolst)
+        all_with_photo.append(all_with_photolst)
+
         photo_file = open('data/pics/the_end.png', 'rb')
         sent = bot.edit_message_media(media=types.InputMedia(type='photo', media=photo_file,
                                                              caption=f'<b>Игра окончена</b>\n'
@@ -397,6 +435,12 @@ def next_quest_phrase(message):
     if len(all_with_phrase[0]) > 1:
         all_with_phrase[0].pop(0)
     else:
+        all_with_phrase.clear()
+
+        all_with_phraselst = cur.execute("""SELECT * FROM films_phrase_questions""").fetchall()
+        all_with_phraselst = list(all_with_phraselst)
+        all_with_phrase.append(all_with_phraselst)
+
         sent = bot.edit_message_text(text=f'<b>Игра окончена</b>\n'
                                           f'Правильных ответов: {len(correct_answers_count)}\n'
                                           f'Ошибок: {len(wrong_answers_count)}\n'
@@ -413,6 +457,12 @@ def next_quest_song(message):
     if len(all_songs[0]) > 1:
         all_songs[0].pop(0)
     else:
+        all_songs.clear()
+
+        all_songslst = cur.execute("""SELECT * FROM line_from_songs_questions""").fetchall()
+        all_songslst = list(all_songslst)
+        all_songs.append(all_songslst)
+
         sent = bot.edit_message_text(text=f'<b>Игра окончена</b>\n'
                                           f'Правильных ответов: {len(correct_answers_count)}\n'
                                           f'Ошибок: {len(wrong_answers_count)}\n'
@@ -571,6 +621,22 @@ def func_callback(callback):
                     reply_markup=next_song)
 
     else:
+        all_with_photo.clear()
+        all_songs.clear()
+        all_with_phrase.clear()
+
+        all_with_photolst = cur.execute("""SELECT * FROM films_photo_questions""").fetchall()
+        all_with_photolst = list(all_with_photolst)
+        all_with_photo.append(all_with_photolst)
+
+        all_with_phraselst = cur.execute("""SELECT * FROM films_phrase_questions""").fetchall()
+        all_with_phraselst = list(all_with_phraselst)
+        all_with_phrase.append(all_with_phraselst)
+
+        all_songslst = cur.execute("""SELECT * FROM line_from_songs_questions""").fetchall()
+        all_songslst = list(all_songslst)
+        all_songs.append(all_songslst)
+
         bot.delete_message(callback.message.chat.id, callback.message.id)
         sent = bot.send_message(callback.message.chat.id, 'Вы вернулись назад.', parse_mode='html', reply_markup=markup)
         bot.register_next_step_handler(sent, mode_selection)
