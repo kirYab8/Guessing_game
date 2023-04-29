@@ -651,4 +651,5 @@ def repeat_all_messages(message):
 
 
 # Запуск и бесконечная работа бота
-bot.polling(none_stop=True)
+while True: # Для постоянной работы
+    bot.polling()
